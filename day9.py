@@ -1,69 +1,88 @@
-import numpy as np
+class Knot:
+    def __init__(self):
+        self.x: int = 0
+        self.y: int = 0
+
+    def get_pos(self) -> tuple:
+        return self.x, self.y
+
+
+class Head(Knot):
+    def __int__(self):
+        super().__init__()
+
+    def move(self, direction: str):
+        if direction == "U":
+            self.y += 1
+        elif direction == "D":
+            self.y -= 1
+        elif direction == "L":
+            self.x -= 1
+        elif direction == "R":
+            self.x += 1
+
+
+class Tail(Knot):
+    def __init__(self):
+        super().__init__()
+        self.save_pos_history: bool = False
+        self.pos_history: set = {(self.x, self.y)}
+
+    def follow(self, head_pos: tuple):
+        head_x, head_y = head_pos
+        vector_x = head_x - self.x
+        vector_y = head_y - self.y
+        if abs(vector_x) > 1:
+            self.x += int(vector_x/2)
+            if vector_y > 0:
+                self.y += 1
+            elif vector_y < 0:
+                self.y -= 1
+        elif abs(vector_y) > 1:
+            self.y += int(vector_y/2)
+            if vector_x > 0:
+                self.x += 1
+            elif vector_x < 0:
+                self.x -= 1
+        if self.save_pos_history:
+            self.pos_history.add((self.x, self.y))
 
 
 def part_one(filepath: str):
+    head = Head()
+    tail = Tail()
+    tail.save_pos_history = True
     with open(filepath) as f:
         text = f.read()
     instructions = text.split("\n")
-    positions = np.zeros((10000, 10000), dtype=np.int_)
-    pos_head = np.array([5000, 5000])
-    pos_tail = np.array([5000, 5000])
-    movement = {
-        "R": np.array([1, 0]),
-        "L": np.array([-1, 0]),
-        "U": np.array([0, 1]),
-        "D": np.array([0, -1])
-    }
     for i in instructions:
         direction, count = i.split(" ")
         for j in range(int(count)):
-            pos_head = pos_head + movement[direction]
-            pos_tail = tail_movement(pos_head, pos_tail)
-            positions[pos_tail[0]][pos_tail[1]] = 1
-    return np.count_nonzero(positions)
+            head.move(direction)
+            tail.follow(head.get_pos())
+    print(f"PART ONE:\n"
+          f"Unique tail positions: {len(tail.pos_history)}")
 
 
-def tail_movement(head, tail):
-    movement_vector = head - tail
-    x, y = movement_vector
-    tail_move = np.array([0, 0], dtype=np.int_)
-    if abs(x)+abs(y) > 2:  # diagonal movement
-        if abs(x) > 1:
-            tail_move = np.array([x/2, y], dtype=np.int_)
-        if abs(y) > 1:
-            tail_move = np.array([x, y/2], dtype=np.int_)
-    elif abs(x) > 1:
-        tail_move = np.array([x/2, 0], dtype=np.int_)
-    elif abs(y) > 1:
-        tail_move = np.array([0, y/2], dtype=np.int_)
-    new_tail_pos = (tail + tail_move)
-    return new_tail_pos
-
-
-def part_two(filepath: str, no_knots: int = 10):
+def part_two(filepath: str):
+    head = Head()
+    tails = [Tail() for _ in range(9)]
+    tails[8].save_pos_history = True
     with open(filepath) as f:
         text = f.read()
     instructions = text.split("\n")
-    tail_positions = np.zeros((10000, 10000), dtype=np.int_)
-    pos_knots = [np.array([5000, 5000]) for x in range(no_knots)]
-    movement = {
-        "R": np.array([1, 0]),
-        "L": np.array([-1, 0]),
-        "U": np.array([0, 1]),
-        "D": np.array([0, -1])
-    }
     for i in instructions:
         direction, count = i.split(" ")
         for j in range(int(count)):
-            pos_knots[0] = pos_knots[0] + movement[direction]
-            for k in range(len(pos_knots)-1):
-                pos_knots[k+1] = tail_movement(pos_knots[k], pos_knots[k+1])
-            tail_positions[pos_knots[9][0], pos_knots[9][1]] = 1
-        # d = np.count_nonzero(tail_positions)
-        pass
-    return np.count_nonzero(tail_positions)
+            head.move(direction)
+            tails[0].follow(head.get_pos())
+            for k in range(1, len(tails)):
+                tails[k].follow(tails[k-1].get_pos())
+    print(f"PART TWO:\n"
+          f"Unique tail positions: {len(tails[len(tails)-1].pos_history)}")
 
 
 if __name__ == "__main__":
-    # print(f"Tail positions in part one: {part_one('data/day9.txt')}")
-    print(f"Tail positions in part two: {part_two('data/day9.txt')}")
+    path = "data/day9.txt"
+    part_one(path)
+    part_two(path)

@@ -25,9 +25,9 @@ def part_one(filepath: str):
     s = str()
     for i in range(len(cycles)):
         if cycles[i]+1 >= i%40 >= cycles[i]-1:
-            s += "#"
+            s += "█"
         else:
-            s += "."
+            s += "░"
     for i in range(1, 7):
         print(s[((i*40)-40):(i*40)-1])
 
